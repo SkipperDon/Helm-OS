@@ -1,0 +1,42 @@
+{
+  "interfaces": {
+    "can": [
+      {
+        "enabled": true,
+        "id": "n2k-can0",
+        "type": "canbus",
+        "options": {
+          "interface": "can0",
+          "productId": "pican-m",
+          "baudrate": 250000,
+          "source": "NMEA2000"
+        }
+      }
+    ],
+    "serial": [
+      {
+        "enabled": true,
+        "id": "gps-usb",
+        "type": "serial",
+        "options": {
+          "device": "/dev/ttyUSB0",
+          "baudrate": 4800,
+          "nmea0183": true,
+          "label": "USB GPS"
+        }
+      },
+      {
+        "enabled": true,
+        "id": "ais-usb",
+        "type": "serial",
+        "options": {
+          "device": "/dev/ttyUSB1",
+          "baudrate": 38400,
+          "nmea0183": true,
+          "label": "USB AIS"
+        }
+      }
+    ]
+  },
+  "enableAutostart": true
+}

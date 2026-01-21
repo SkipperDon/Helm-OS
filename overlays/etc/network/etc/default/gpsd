@@ -1,0 +1,2 @@
+DEVICES="/dev/ttyUSB0 /dev/ttyUSB1"
+GPSD_OPTIONS="-n"

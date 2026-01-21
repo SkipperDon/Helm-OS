@@ -35,3 +35,9 @@ After installation, reboot: sudo reboot
 
 Your Pi will now be a complete helm system.
 
+## Disclaimer
+
+Helm OS is provided “as is” without any warranties or guarantees. 
+Use of this software on a vessel is entirely at your own risk. 
+The authors and contributors are not responsible for any damage, 
+data loss, navigation errors, or safety issues resulting from its use.

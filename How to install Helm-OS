@@ -1,0 +1,11 @@
+On a fresh Raspberry Pi OS 64‑bit Full Desktop:
+
+curl -sL https://raw.githubusercontent.com/SkipperDon/helm-os/main/install.sh | bash
+
+Then
+
+in a terminal window or Gui
+
+sudo reboot
+
+Your Pi becomes a full helm system

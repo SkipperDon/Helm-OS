@@ -8,9 +8,7 @@ sudo apt-get update
 
 sudo apt-get -o Dpkg::Options::="--force-confold" \
              -o Dpkg::Options::="--force-confdef" \
-             install -y \
-             <your package list>
-
+             install -y <packages>
 
 echo "=== Updating system ==="
 sudo apt update

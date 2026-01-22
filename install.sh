@@ -1,7 +1,6 @@
 #!/bin/bash
-set -e
 
-REPO="https://github.com/SipperDon/Helm-OS.git"
+REPO="https://github.com/SkipperDon/Helm-OS.git"
 TARGET="/home/pi/helm-os"
 
 echo "=== Downloading Helm OS repository ==="

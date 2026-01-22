@@ -1,14 +1,21 @@
 #!/bin/bash
 set -e
 export DEBIAN_FRONTEND=noninteractive
-
 HELM_USER="pi"
+echo "=== FIRST BOOT: Installing Helm System ==="
 
+# Expand filesystem
+raspi-config nonint do_expand_rootfs
+
+# Install all packages
+bash /usr/local/bin/install-packages.sh
+
+# Disable firstboot so it only runs once
+systemctl disable firstboot.service
+
+echo "=== FIRST BOOT COMPLETE ==="
 sudo apt-get update
 
-sudo apt-get -o Dpkg::Options::="--force-confold" \
-             -o Dpkg::Options::="--force-confdef" \
-             install -y <packages>
 
 echo "=== Updating system ==="
 sudo apt update

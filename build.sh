@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
-
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "=== HELM OS BUILDER (Version 3) ==="
 
 # Apply overlays
 echo "Copying overlays into system..."
-sudo rsync -av overlays/ /
+sudo rsync -av "$SCRIPT_DIR/overlays/" /
 
 # Install scripts
 echo "Installing firstboot + package installer..."

@@ -9,8 +9,8 @@ sudo rsync -av "$SCRIPT_DIR/overlays/" /
 
 # Install scripts
 echo "Installing firstboot + package installer..."
-sudo cp scripts/firstboot.sh /usr/local/bin/firstboot.sh
-sudo cp scripts/install-packages.sh /usr/local/bin/install-packages.sh
+sudo cp "$SCRIPT_DIR/scripts/firstboot.sh" /usr/local/bin/firstboot.sh
+sudo cp "$SCRIPT_DIR/scripts/install-packages.sh" /usr/local/bin/install-packages.sh
 sudo chmod +x /usr/local/bin/firstboot.sh
 sudo chmod +x /usr/local/bin/install-packages.sh
 

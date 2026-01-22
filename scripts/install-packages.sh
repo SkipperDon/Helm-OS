@@ -1,53 +1,97 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
 export DEBIAN_FRONTEND=noninteractive
-HELM_USER="pi"
-echo "=== FIRST BOOT: Installing Helm System ==="
 
-# Expand filesystem
-raspi-config nonint do_expand_rootfs
+log() {
+  echo "[install-packages] $*"
+}
 
-# Install all packages
-bash /usr/local/bin/install-packages.sh
+ROOT="/usr/local/helm-os"
 
-# Disable firstboot so it only runs once
-systemctl disable firstboot.service
+log "=== INSTALLING HELM-OS PACKAGES AND CONFIGURATION ==="
 
-echo "=== FIRST BOOT COMPLETE ==="
-sudo apt-get update
+# Ensure base directories exist
+mkdir -p "$ROOT"
 
+# Copy repo assets into place
+if [ -d /home/pi/helm-os ]; then
+  log "Copying helm-os repo into $ROOT..."
+  rsync -a --delete /home/pi/helm-os/ "$ROOT/"
+else
+  log "ERROR: /home/pi/helm-os not found. Aborting."
+  exit 1
+fi
 
-echo "=== Updating system ==="
-sudo apt update
-sudo apt full-upgrade -y
+# -------------------------------
+# Install core system packages
+# -------------------------------
+log "Installing core system packages..."
 
-echo "=== Installing core packages ==="
-sudo apt install -y \
-  git curl build-essential python3 python3-pip \
-  can-utils pkg-config \
-  gpsd gpsd-clients \
-  vlc \
-  chromium-browser \
-  x11vnc \
-  hostapd dnsmasq \
-  xinput xserver-xorg-input-libinput \
-  lxterminal lxappearance fonts-dejavu \
-  net-tools
+apt-get update
+apt-get install -y \
+  hostapd \
+  dnsmasq \
+  gpsd \
+  gpsd-clients \
+  can-utils \
+  python3-can \
+  python3-pip \
+  git \
+  curl \
+  net-tools \
+  iproute2 \
+  jq \
+  nodejs \
+  npm
 
-echo "=== Installing Node.js LTS ==="
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt install -y nodejs
+# -------------------------------
+# Configure CAN bus
+# -------------------------------
+log "Configuring CAN bus..."
 
-echo "=== Installing Signal K ==="
-sudo npm install -g --unsafe-perm signalk-server
+install -m 644 "$ROOT/configs/can0" /etc/network/interfaces.d/can0
 
-echo "=== Enabling services ==="
-sudo systemctl enable hostapd
-sudo systemctl enable dnsmasq
-sudo systemctl enable gpsd
+# -------------------------------
+# Configure Wi-Fi Access Point
+# -------------------------------
+log "Configuring Wi-Fi AP..."
 
-echo "=== Bringing up CAN0 ==="
-sudo ip link set can0 type can bitrate 250000 || true
-sudo ifconfig can0 up || true
+install -m 644 "$ROOT/configs/dnsmasq-eth0.conf" /etc/dnsmasq.d/eth0.conf
+install -m 644 "$ROOT/configs/hostapd.conf" /etc/hostapd/hostapd.conf
 
-echo "=== Installing complete ==="
+systemctl enable hostapd
+systemctl enable dnsmasq
+
+# -------------------------------
+# Install and configure Signal K
+# -------------------------------
+log "Installing Signal K..."
+
+npm install -g --unsafe-perm signalk-server
+
+# Copy Signal K defaults
+mkdir -p /home/pi/.signalk
+install -m 644 "$ROOT/configs/signalk-defaults.json" /home/pi/.signalk/settings.json
+chown -R pi:pi /home/pi/.signalk
+
+# -------------------------------
+# Install systemd services
+# -------------------------------
+log "Installing systemd services..."
+
+for svc in "$ROOT/services/"*.service; do
+  install -m 644 "$svc" /etc/systemd/system/
+done
+
+systemctl daemon-reload
+
+# Enable helm-os services
+systemctl enable helm-web.service || true
+systemctl enable helm-can.service || true
+systemctl enable helm-gps.service || true
+
+# -------------------------------
+# Finalization
+# -------------------------------
+log "Helm OS installation complete."

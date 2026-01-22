@@ -1,7 +1,16 @@
 #!/bin/bash
 set -e
+export DEBIAN_FRONTEND=noninteractive
 
 HELM_USER="pi"
+
+sudo apt-get update
+
+sudo apt-get -o Dpkg::Options::="--force-confold" \
+             -o Dpkg::Options::="--force-confdef" \
+             install -y \
+             <your package list>
+
 
 echo "=== Updating system ==="
 sudo apt update

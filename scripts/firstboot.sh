@@ -12,7 +12,7 @@ log "=== FIRST BOOT: Installing Helm System ==="
 # Update package index
 apt-get update
 
-# Base packages needed for Helm OS provisioning and diagnostics
+# Install the base packages required for Helm OS provisioning
 apt-get -o Dpkg::Options::="--force-confold" \
         -o Dpkg::Options::="--force-confdef" \
         install -y \
@@ -27,11 +27,11 @@ apt-get -o Dpkg::Options::="--force-confold" \
         curl \
         git
 
-# Expand filesystem (ignore if already expanded)
+# Expand filesystem (safe to run multiple times)
 if raspi-config nonint do_expand_rootfs; then
   log "Root filesystem expanded."
 else
-  log "Root filesystem expansion skipped or already done."
+  log "Filesystem already expanded or skipped."
 fi
 
 # Run the main Helm OS installer if present
@@ -39,14 +39,14 @@ if [ -x /usr/local/bin/install-packages.sh ]; then
   log "Running install-packages.sh..."
   bash /usr/local/bin/install-packages.sh
 else
-  log "WARNING: /usr/local/bin/install-packages.sh not found or not executable."
+  log "WARNING: install-packages.sh not found or not executable."
 fi
 
 # Disable firstboot so it only runs once
 if systemctl disable firstboot.service; then
   log "firstboot.service disabled."
 else
-  log "WARNING: could not disable firstboot.service (already disabled?)."
+  log "WARNING: could not disable firstboot.service (maybe already disabled)."
 fi
 
 log "=== FIRST BOOT COMPLETE ==="

@@ -334,7 +334,6 @@ The data model is intentionally:
 
 # **2. High‑Level Data Model Diagram**
 
-```mermaid
 erDiagram
 
     OPERATOR {

@@ -1,33 +1,32 @@
-# 📄 **onboarding_voice_datamodel.md**  
+# 📄 **UPDATED onboarding_voice_datamodel.md**  
 ### *helm‑OS Onboarding & VoiceFlow Data Model Specification*  
-*(Authoritative System Reference — Updated)*
+*(Finalized for GitHub — aligned with current implementation)*
 
 ---
 
 ## **1. Purpose**
 
-This document defines the **canonical data model** for helm‑OS onboarding and voiceflow integration.  
-It ensures:
+This document defines the **canonical data model** and **onboarding flow** for helm‑OS.  
+It ensures that:
 
-- UI  
-- backend  
-- voice interaction  
+- onboarding UI  
+- backend services  
+- voiceflow integration  
 - analytics  
-- hardware configuration  
+- system initialization  
 
-all operate from the same source of truth.
+all operate from a single, authoritative source of truth.
 
-This specification must be updated **before** any implementation changes are made.
+Any changes to this document must be made **before** modifying code.
 
 ---
 
 ## **2. Onboarding Flow Overview**
 
-The onboarding process is a **multi‑step wizard** optimized for touchscreen use.  
+helm‑OS uses a **multi‑step touchscreen wizard** optimized for a helm environment.  
 The bottom 1/3 of the screen is reserved for the on‑screen keypad.
 
-The steps are:
-
+### **Steps**
 1. Operator  
 2. Time  
 3. Hardware  
@@ -35,25 +34,24 @@ The steps are:
 5. Engine  
 6. Navigation  
 7. Network  
-8. **Summary (AI‑assisted completion)**  
-9. **Start Again / Complete**
+8. Summary (AI‑assisted completion)  
+9. Start Again / Complete  
 
-The UI theme is:
-
-- **Black background**
-- **Green highlights**
-- **Terminal‑style contrast**
+### **Theme**
+- Black background  
+- Green highlights  
+- Large touchscreen‑friendly fonts  
 
 ---
 
 ## **3. Data Model**
 
-The onboarding system collects the following fields.  
-These fields are also exposed to the VoiceFlow subsystem.
+The onboarding system collects the following fields and stores them in a structured JSON file.  
+These fields are also exposed to VoiceFlow for natural‑language interaction.
 
 ---
 
-### **3.1 Operator Information**
+### **3.1 Operator**
 
 | Field | Description |
 |-------|-------------|
@@ -61,16 +59,19 @@ These fields are also exposed to the VoiceFlow subsystem.
 
 ---
 
-### **3.2 Time Configuration**
+### **3.2 Time**
 
 | Field | Description |
 |-------|-------------|
-| `time.region` | Time region derived from system clock |
-| `time.correct_time` | Confirmation that system time is correct |
+| `time.region` | Time region (user‑entered) |
+| `time.correct_time` | Confirmed or AI‑filled current time |
+
+**AI Behavior:**  
+If `correct_time` is blank, helm‑OS fills it using the system clock.
 
 ---
 
-### **3.3 Hardware Configuration**
+### **3.3 Hardware**
 
 #### HAT Type  
 `hardware.hat_type`  
@@ -88,17 +89,19 @@ Allowed values:
 
 ---
 
-### **3.4 Vessel Information**
+### **3.4 Vessel**
 
 | Field | Description |
 |-------|-------------|
-| `vessel.manufacturer` | Vessel manufacturer |
-| `vessel.manufacturer_region` | Region of manufacturer (North America, Europe, Asia, Australia, Africa, South America) |
-| `vessel.boat_manufacturer_region` | **Corrected field name** (formerly “Boat Manufacturer”) |
+| `vessel.manufacturer_region` | Region of vessel manufacturer |
+| `vessel.boat_manufacturer` | Name of the boat manufacturer |
+
+**Removed:**  
+- `manufacturer` (redundant)
 
 ---
 
-### **3.5 Engine Information**
+### **3.5 Engine**
 
 | Field | Description |
 |-------|-------------|
@@ -107,13 +110,13 @@ Allowed values:
 | `engine.year` | Year of manufacture |
 | `engine.cylinders` | Number of cylinders |
 | `engine.stroke` | 2‑stroke or 4‑stroke |
-| `engine.gear_ratio` | Gear ratio (varies by engine type) |
+| `engine.gear_ratio` | Gear ratio |
 | `engine.engine_type` | Alternator w‑terminal, Gasoline ignition coil, Diesel magnetic pickup, ECU digital output |
 | `engine.fuel_type` | Gas, Diesel, Hybrid, Electric |
 
 ---
 
-### **3.6 Navigation Equipment**
+### **3.6 Navigation**
 
 | Field | Description |
 |-------|-------------|
@@ -121,7 +124,7 @@ Allowed values:
 
 ---
 
-### **3.7 Network Configuration**
+### **3.7 Network**
 
 | Field | Description |
 |-------|-------------|
@@ -131,38 +134,29 @@ Allowed values:
 
 ## **4. Summary Step (AI‑Assisted Completion)**
 
-After all fields are collected, helm‑OS generates a **Summary Screen**.
+After all fields are entered, helm‑OS generates a **Summary Screen**.
 
-The summary includes:
+### **AI Behavior**
+- Any empty field eligible for inference is filled automatically  
+- AI‑filled fields are tagged visually  
+- Missing fields are highlighted in yellow  
 
-```
-summary:
-  operator
-  time
-  hardware
-  vessel
-  engine
-  navigation
-  network
-  ai_filled_fields
-```
-
-The user is presented with:
-
+### **User Options**
 - **Start Again**  
   - Clears onboarding.json  
   - Returns to Step 1  
-
 - **Complete**  
-  - Writes final onboarding.json  
+  - Saves final onboarding.json  
   - Sets `"complete": true`  
-  - Signals Tier‑1 services to initialize  
+  - Displays a “Setup Complete” confirmation screen  
+
+No redirect occurs unless a future UI page is defined.
 
 ---
 
 ## **5. Canonical JSON Structure**
 
-This is the exact structure stored at:
+Stored at:
 
 ```
 /opt/helm-os/state/onboarding.json
@@ -182,9 +176,8 @@ This is the exact structure stored at:
     "analog_converter": ""
   },
   "vessel": {
-    "manufacturer": "",
     "manufacturer_region": "",
-    "boat_manufacturer_region": ""
+    "boat_manufacturer": ""
   },
   "engine": {
     "make": "",
@@ -207,19 +200,19 @@ This is the exact structure stored at:
 ```
 
 This is the **authoritative schema**.  
-All onboarding UI, backend services, and voiceflow must adhere to this structure.
+All onboarding UI, backend logic, and voiceflow intents must adhere to it.
 
 ---
 
 ## **6. VoiceFlow Integration**
 
-VoiceFlow uses the same fields to:
+VoiceFlow uses this data model to:
 
 - answer system questions  
 - confirm onboarding values  
 - generate system summaries  
-- route configuration commands  
 - support hands‑free diagnostics  
+- route configuration commands  
 
 Voice intents map directly to the fields in this document.
 
@@ -232,15 +225,7 @@ Any modification to:
 - field names  
 - allowed values  
 - structure  
-- nesting  
 - semantics  
 
-must be updated in this document **before** implementation.
+must be reflected in this document **before** implementation.
 
-This prevents drift between:
-
-- onboarding UI  
-- onboarding backend  
-- voiceflow  
-- analytics  
-- system services  

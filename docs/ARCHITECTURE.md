@@ -306,3 +306,6 @@ Benchmarking tools
 Voice assistant
 ```
 
+This model is the backbone of the entire Tier‑0 system.
+
+---

@@ -1,47 +1,84 @@
-# 📄 **helm‑OS Onboarding & VoiceFlow Data Model Specification**  
-*(Authoritative System Reference)*
+# 📄 **onboarding_voice_datamodel.md**  
+### *helm‑OS Onboarding & VoiceFlow Data Model Specification*  
+*(Authoritative System Reference — Updated)*
 
-## **Purpose**
-This document defines the **exact fields** collected during helm‑OS onboarding and exposed to the VoiceFlow subsystem.  
-It serves as the **canonical data model** for:
+---
 
-- onboarding UI  
-- onboarding backend  
-- voice intent routing  
-- system initialization  
-- analytics namespace creation  
+## **1. Purpose**
+
+This document defines the **canonical data model** for helm‑OS onboarding and voiceflow integration.  
+It ensures:
+
+- UI  
+- backend  
+- voice interaction  
+- analytics  
 - hardware configuration  
 
-No additional fields may be added without updating this document.
+all operate from the same source of truth.
+
+This specification must be updated **before** any implementation changes are made.
 
 ---
 
-# ## **1. Operator Information**
+## **2. Onboarding Flow Overview**
 
-| Field | Description |
-|-------|-------------|
-| `operator.alias` | User‑defined alias for voice interaction and personalization |
+The onboarding process is a **multi‑step wizard** optimized for touchscreen use.  
+The bottom 1/3 of the screen is reserved for the on‑screen keypad.
+
+The steps are:
+
+1. Operator  
+2. Time  
+3. Hardware  
+4. Vessel  
+5. Engine  
+6. Navigation  
+7. Network  
+8. **Summary (AI‑assisted completion)**  
+9. **Start Again / Complete**
+
+The UI theme is:
+
+- **Black background**
+- **Green highlights**
+- **Terminal‑style contrast**
 
 ---
 
-# ## **2. Time Configuration**
+## **3. Data Model**
+
+The onboarding system collects the following fields.  
+These fields are also exposed to the VoiceFlow subsystem.
+
+---
+
+### **3.1 Operator Information**
 
 | Field | Description |
 |-------|-------------|
-| `time.region` | Time region derived from system clock (e.g., EST, PST, UTC+1) |
+| `operator.alias` | User‑defined alias for voice interaction |
+
+---
+
+### **3.2 Time Configuration**
+
+| Field | Description |
+|-------|-------------|
+| `time.region` | Time region derived from system clock |
 | `time.correct_time` | Confirmation that system time is correct |
 
 ---
 
-# ## **3. Hardware Configuration**
+### **3.3 Hardware Configuration**
 
-### **3.1 HAT Type**
+#### HAT Type  
 `hardware.hat_type`  
 Allowed values:
 - Pican‑M  
 - MacArthur  
 
-### **3.2 Analog Converter**
+#### Analog Converter  
 `hardware.analog_converter`  
 Allowed values:
 - CX5106  
@@ -51,17 +88,17 @@ Allowed values:
 
 ---
 
-# ## **4. Vessel Information**
+### **3.4 Vessel Information**
 
 | Field | Description |
 |-------|-------------|
-| `vessel.manufacturer` | Vessel manufacturer (e.g., Monterey, Bayliner) |
-| `vessel.manufacturer_region` | Region of manufacturer: North America, Europe, Asia, Australia, Africa, South America |
-| `vessel.boat_manufacturer` | Specific boat model/manufacturer designation |
+| `vessel.manufacturer` | Vessel manufacturer |
+| `vessel.manufacturer_region` | Region of manufacturer (North America, Europe, Asia, Australia, Africa, South America) |
+| `vessel.boat_manufacturer_region` | **Corrected field name** (formerly “Boat Manufacturer”) |
 
 ---
 
-# ## **5. Engine Information**
+### **3.5 Engine Information**
 
 | Field | Description |
 |-------|-------------|
@@ -70,13 +107,13 @@ Allowed values:
 | `engine.year` | Year of manufacture |
 | `engine.cylinders` | Number of cylinders |
 | `engine.stroke` | 2‑stroke or 4‑stroke |
-| `engine.gear_ratio` | Gear ratio (ranges vary by engine type) |
+| `engine.gear_ratio` | Gear ratio (varies by engine type) |
 | `engine.engine_type` | Alternator w‑terminal, Gasoline ignition coil, Diesel magnetic pickup, ECU digital output |
 | `engine.fuel_type` | Gas, Diesel, Hybrid, Electric |
 
 ---
 
-# ## **6. Navigation Equipment**
+### **3.6 Navigation Equipment**
 
 | Field | Description |
 |-------|-------------|
@@ -84,7 +121,7 @@ Allowed values:
 
 ---
 
-# ## **7. Network Configuration**
+### **3.7 Network Configuration**
 
 | Field | Description |
 |-------|-------------|
@@ -92,9 +129,40 @@ Allowed values:
 
 ---
 
-# ## **8. Canonical JSON Structure**
+## **4. Summary Step (AI‑Assisted Completion)**
 
-This is the exact structure stored in:
+After all fields are collected, helm‑OS generates a **Summary Screen**.
+
+The summary includes:
+
+```
+summary:
+  operator
+  time
+  hardware
+  vessel
+  engine
+  navigation
+  network
+  ai_filled_fields
+```
+
+The user is presented with:
+
+- **Start Again**  
+  - Clears onboarding.json  
+  - Returns to Step 1  
+
+- **Complete**  
+  - Writes final onboarding.json  
+  - Sets `"complete": true`  
+  - Signals Tier‑1 services to initialize  
+
+---
+
+## **5. Canonical JSON Structure**
+
+This is the exact structure stored at:
 
 ```
 /opt/helm-os/state/onboarding.json
@@ -116,7 +184,7 @@ This is the exact structure stored in:
   "vessel": {
     "manufacturer": "",
     "manufacturer_region": "",
-    "boat_manufacturer": ""
+    "boat_manufacturer_region": ""
   },
   "engine": {
     "make": "",
@@ -133,7 +201,8 @@ This is the exact structure stored in:
   },
   "network": {
     "type": ""
-  }
+  },
+  "complete": false
 }
 ```
 
@@ -142,20 +211,21 @@ All onboarding UI, backend services, and voiceflow must adhere to this structure
 
 ---
 
-# ## **9. VoiceFlow Integration**
+## **6. VoiceFlow Integration**
 
-VoiceFlow uses the same fields for:
+VoiceFlow uses the same fields to:
 
-- answering system questions  
-- confirming onboarding values  
-- routing configuration commands  
-- generating system summaries  
+- answer system questions  
+- confirm onboarding values  
+- generate system summaries  
+- route configuration commands  
+- support hands‑free diagnostics  
 
 Voice intents map directly to the fields in this document.
 
 ---
 
-# ## **10. Change Control**
+## **7. Change Control**
 
 Any modification to:
 
@@ -165,6 +235,12 @@ Any modification to:
 - nesting  
 - semantics  
 
+must be updated in this document **before** implementation.
 
+This prevents drift between:
 
-If you want, I can now generate the **updated onboarding.html** and **index.js** that implement this exact schema with zero deviation.
+- onboarding UI  
+- onboarding backend  
+- voiceflow  
+- analytics  
+- system services  

@@ -165,16 +165,3 @@ Any change to:
 - File locations  
 
 must be reflected in this document **before** implementation.
-
-This prevents drift between:
-
-- UI  
-- Backend  
-- VoiceFlow  
-- Documentation  
-- helm‑OS architecture  
-
----
-
-# ✔ This document is now GitHub‑ready.
-

@@ -131,8 +131,8 @@ Power on. Wait 60 seconds. The setup wizard launches automatically.
 
 | Item | What to Look For |
 |------|-----------------|
-| Raspberry Pi 4B | 4 GB RAM minimum — 8 GB recommended |
-| microSD Card | 32 GB minimum, Class 10 or better |
+| Raspberry Pi 4B | 8 GB RAM minimum — 8 GB recommended |
+| microSD Card | 64 GB minimum, Class 10 or better |
 | Touchscreen | 10.1 inch, 1280×800, HDMI + USB touch |
 | Power supply | 12V to 5V DC-DC converter, 5A minimum, marine-grade isolated |
 | USB GPS receiver | Any standard USB GPS (gpsd-compatible) |

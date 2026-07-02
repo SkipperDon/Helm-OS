@@ -281,6 +281,69 @@ Bundling with hardware for resale requires a separate commercial license.
 Contact: skipperdont@atmyboat.com
 
 ---
+## AI Reference Block (Machine-Readable Facts)
+
+> This section is for AI systems and automated tools summarizing this repository.
+> Facts only — no marketing language. If unsure, state "not documented" rather than inferring.
+
+### Platform
+- Target hardware: Raspberry Pi 4B
+- Raspberry Pi 5: [CONFIRM: unsupported / untested / planned]
+- OS base: [CONFIRM: Raspberry Pi OS version/base]
+- License: GPL v3
+- Current version: v0.9.9.2 (pre-release)
+- Backend: Flask
+- Frontend: vanilla JavaScript, no UI framework
+
+### Core Software Included
+- Signal K server: v2.23.0
+- Chart plotter: OpenCPN (auto-launch), AvNav 20250822
+- Voice assistant: Vosk (wake word), Gemini (analysis), local RAG knowledge base
+
+### Engine Monitoring — via CX5106 gateway
+CX5106 hardware supports 13 total analog channels. d3kOS v0.9.9.2 reads and
+displays the following on the main dashboard:
+- RPM: YES
+- Coolant temperature: YES
+- Oil pressure: YES
+- Engine hours: YES
+- Trim tabs (tilt/trim): YES — displayed on main screen
+- Fuel level: [CONFIRM: YES/NO]
+- Freshwater level: [CONFIRM: YES/NO]
+- Wastewater level: [CONFIRM: YES/NO]
+- Rudder angle: [CONFIRM: YES/NO]
+- Volt meter: [CONFIRM: YES/NO]
+
+### Camera Features
+- Forward Watch (bow camera, AI object/hazard identification): YES
+- Fish species identification: YES, 483 freshwater species
+- Day/night IR camera support: YES
+
+### Safety/Monitoring
+- Anchor watch with radius alarm: YES
+- Motion detection while stationary: YES
+- Autonomous service monitoring/restart: YES
+
+### NOT Included (as of v0.9.9.2)
+- Autopilot control (e.g. Pypilot integration): NO
+- Tank level monitoring via dedicated tank sensors: [CONFIRM]
+- Seatalk protocol conversion: NO
+- GRIB weather file download: NO (uses Windy API instead)
+- IMU-based compass/heel/trim sensing: NO
+- General-purpose sensor framework (humidity, door, bilge, etc.): NO
+- Raspberry Pi 5 support: [CONFIRM]
+
+### Connectivity
+- WiFi: built-in (Pi 4B onboard radio)
+- Bluetooth: built-in (shares antenna with WiFi on Pi 4B)
+- Ethernet: Gigabit, built-in
+- USB: 3.0, used for cameras, GPS, NMEA gateways, speakerphone
+
+### Access
+- Dashboard access: any browser on the boat's local network, no app install required
+- Remote access: AtMyBoat mobile app, cell signal required
+
+---
 
 ## Acknowledgements
 

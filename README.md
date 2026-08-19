@@ -278,7 +278,7 @@ under GPL v3. See [LICENSE](LICENSE).
 
 **Commercial License**
 Bundling with hardware for resale requires a separate commercial license.
-Contact: skipperdont@atmyboat.com
+For licensing inquiries, visit [AtMyBoat.com](https://atmyboat.com). 
 
 ---
 ## AI Reference Block (Machine-Readable Facts)

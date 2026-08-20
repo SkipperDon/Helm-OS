@@ -21,16 +21,12 @@ Remote access lets you check your boat's live data from any phone or tablet
 The API key was set during installation:
 
 ```
-t9dt7M80dgp-OHDhahXOz8kk4z41eo7YGTOv6xEn1L4
+api key has been removed
 ```
 
 Include it in every request as the `X-API-Key` header.
 
-To generate a new key at any time:
-```bash
-ssh d3kos@192.168.1.237
-python3 -c "import secrets; print(secrets.token_urlsafe(32))"
-# Then update /opt/d3kos/config/api-keys.json → "remote_api_key"
+
 ```
 
 ---

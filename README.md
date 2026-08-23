@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/atmyboat-logo-transparent.png" alt="AtMyBoat d3kOS" width="320"/>
+</p>
+
 # d3kOS — Helm Intelligence for Your Boat
 
 **An open-source operating system for Raspberry Pi that gives your boat a brain.**
@@ -104,6 +108,10 @@ AtMyBoat.com is free to join. The mobile app has free and supported tiers.
 | USB speakerphone (e.g. Anker S330) | Hands-free HELM voice assistant |
 | IP cameras (PoE, RTSP stream) | Marine Vision camera system |
 | NMEA 2000 gateway (e.g. CX5106 or PiCAN-M) | Live engine data from your NMEA 2000 network |
+
+<p align="center">
+  <img src="assets/images/cx5106_10125.png" alt="CX5106 NMEA 2000 Gateway" width="400"/>
+</p>
 
 See [`docs/INSTALLATION.md`](docs/INSTALLATION.md) and [`docs/CX5106_CONFIGURATION_GUIDE.md`](docs/CX5106_CONFIGURATION_GUIDE.md) for detailed setup guides.
 

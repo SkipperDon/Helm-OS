@@ -230,9 +230,7 @@ Turkish · Ukrainian · Chinese
 |----------|-------------|
 | [`docs/D3KOS_USER_MANUAL_v2.3.0.md`](docs/D3KOS_USER_MANUAL_v2.3.0.md) | Complete user manual — all features, setup, troubleshooting |
 | [`docs/INSTALLATION.md`](docs/INSTALLATION.md) | Step-by-step installation guide |
-| [`docs/SIGNALK_CONFIGURATION.md`](docs/SIGNALK_CONFIGURATION.md) | Connecting NMEA 0183 and NMEA 2000 instruments |
 | [`docs/CX5106_CONFIGURATION_GUIDE.md`](docs/CX5106_CONFIGURATION_GUIDE.md) | CX5106 NMEA gateway setup and DIP switch reference |
-| [`docs/REMOTE_ACCESS_SETUP.md`](docs/REMOTE_ACCESS_SETUP.md) | Accessing d3kOS from another device on your network |
 | [`docs/OPENCPN_FLATPAK_OCHARTS.md`](docs/OPENCPN_FLATPAK_OCHARTS.md) | OpenCPN and paid o-charts chart packs |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history |
 

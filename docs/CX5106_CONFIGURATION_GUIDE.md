@@ -14,252 +14,165 @@ The CX5106 is an analog-to-NMEA2000 engine gateway that converts analog engine s
 
 ## Part 1: DIP Switch Configuration Logic
 
-The CX5106 has **8 DIP switches** that control how it operates and what PGNs it outputs.
+The CX5106 has two physically separate switch blocks inside the enclosure. They are **not** eight
+switches in one row.
 
-### Physical DIP Switch Location
+### Physical DIP Switch Layout
 
 **Visual Reference:**
 
 ![CX5106 DIP Switches](../../assets/images/cx5106_10125.png)
 
-*Photo showing the actual CX5106 DIP switch locations on the device*
+*Photo showing the actual CX5106 interior: the 7-position Block A (upper) and 2-position Block B (lower).*
 
-The DIP switches are located on the side of the CX5106 unit and are clearly labeled 1-8 from left to right.
+```
+   BLOCK A — SEVEN positions (numbered 1–7)
+   Sets ONE value: the RPM speed ratio
 
-### DIP Switch Functions
+   +-------------------------------+
+   | ON                            |
+   | [ ] [ ] [ ] [ ] [ ] [ ] [ ]  |
+   |  1   2   3   4   5   6   7   |
+   +-------------------------------+
 
-Based on the CX5106 manual analysis:
 
-#### **Switches 1-2: Engine Instance Selection**
-Controls which engine instance number is assigned on the NMEA2000 network.
+   BLOCK B — TWO positions (numbered 1 and 2)
+   Sets TWO independent things
 
-| SW1 | SW2 | Engine Instance |
-|-----|-----|-----------------|
-| OFF | OFF | Instance 0 (Primary/Single Engine) |
-| ON  | OFF | Instance 1 (Port Engine) |
-| OFF | ON  | Instance 2 (Starboard Engine) |
-| ON  | ON  | Instance 3 (Center/Auxiliary) |
+   +-------------+
+   | ON          |
+   | [ ] [ ]     |
+   |  1   2      |
+   +-------------+
+```
 
-**Purpose**: Prevents instance conflicts when multiple engines are on the same NMEA2000 network.
+### Block A — RPM Speed Ratio (7 positions)
 
----
+The seven switches in Block A encode a **single binary number**: the RPM speed ratio. They are not
+seven independent settings. Each switch has a place value, with switch 1 as the least significant:
 
-#### **Switches 3-4: RPM Source Configuration**
-Selects the type of signal input for RPM measurement.
+| Switch | 1 | 2 | 3 | 4 | 5  | 6  | 7  |
+|--------|---|---|---|---|----|----|----|
+| Value  | 1 | 2 | 4 | 8 | 16 | 32 | 64 |
 
-| SW3 | SW4 | RPM Source Type | Description |
-|-----|-----|-----------------|-------------|
-| OFF | OFF | Alternator W-Terminal | AC signal from alternator W terminal |
-| ON  | OFF | Ignition Coil | Gasoline engine ignition pulse |
-| OFF | ON  | Magnetic Pickup | Diesel flywheel sensor |
-| ON  | ON  | ECU Digital Output | Direct from engine ECU |
+**Rule:** `ratio = 1 + (sum of the values of every switch that is ON)`
 
-**Purpose**: Matches the CX5106 input configuration to the actual engine signal type.
+- All switches OFF → ratio **1**
+- Switch 1 and 2 ON → 1 + 2 = 3 → ratio **4**
 
----
+To set a ratio: take the ratio, subtract 1, then express the remainder as a sum of switch values.
 
-#### **Switches 5-6: Number of Cylinders**
-Sets cylinder count for accurate RPM calculation.
+**Common ratios by engine type** (from the manufacturer's leaflet):
 
-| SW5 | SW6 | Cylinders |
-|-----|-----|-----------|
-| OFF | OFF | 4 cylinders |
-| ON  | OFF | 6 cylinders |
-| OFF | ON  | 8 cylinders |
-| ON  | ON  | 3 cylinders |
+| Engine | Ratio | Block A switches ON |
+|---|---|---|
+| 4-cylinder, 4-cycle inboard gasoline | 2 | **1** |
+| 6-cylinder, 4-cycle inboard gasoline | 3 | **2** |
+| **8-cylinder, 4-cycle inboard gasoline** | **4** | **1, 2** |
+| 10-cylinder, 4-cycle inboard gasoline | 5 | **3** |
+| 12-cylinder, 4-cycle inboard gasoline | 6 | **1, 3** |
+| Outboard — 4 poles | 2 | **1** |
+| Outboard — 6 poles | 3 | **2** |
+| Outboard — 8 poles | 4 | **1, 2** |
+| Diesel — gear number N | N | per ratio rule |
 
-**Purpose**: The CX5106 uses cylinder count to calculate RPM from the incoming pulse frequency.
-
----
-
-#### **Switch 7: Engine Stroke Type**
-Selects between 2-stroke and 4-stroke engine timing.
-
-| SW7 | Engine Type |
-|-----|-------------|
-| OFF | 4-Stroke |
-| ON  | 2-Stroke |
-
-**Purpose**: 2-stroke engines fire once per revolution, 4-stroke engines fire once every two revolutions.
+For diesel engines, the manufacturer states: **Speed Ratio = Gear Number**. If the gear number is
+not in the engine documentation, determine the ratio empirically (see the companion guide
+`CX5106_DIP_SWITCH.md`).
 
 ---
 
-#### **Switch 8: Gear Ratio**
-Adjusts RPM calculation for geared engines.
+### Block B — Independent Settings (2 positions)
 
-| SW8 | Gear Ratio |
-|-----|------------|
-| OFF | 1:1 (Direct Drive) |
-| ON  | 2:1 (Reduction Gear) |
+| Switch | OFF | ON |
+|--------|-----|----|
+| **1** — tank level sender standard | `0–190 Ω` (European) | `240–33 Ω` (American) |
+| **2** — engine position | `PORT` | `STBD` |
 
-**Purpose**: If the RPM sensor reads propeller shaft speed instead of engine crankshaft, this corrects the displayed RPM.
-
-**Note**: Some engines use 2.5:1 or other ratios - in these cases, use OFF and note that displayed RPM will need manual interpretation.
+Block B switch 1 applies to **all** tank inputs simultaneously (fuel, fresh water, black water,
+livewell). There is no per-tank setting.
 
 ---
 
-## Part 2: Required Wizard Questions
+## Part 2: Wizard Questions
 
-To automatically configure the CX5106 DIP switches, the helm-OS wizard must ask these questions:
+To automatically determine the correct switch positions, the helm-OS wizard asks the following
+questions.
 
-### **Question 1: Number of Engines**
-**Question**: "How many engines does your vessel have?"
+### **Question 1: Engine Type**
+**Question**: "What type of engine does your vessel have?"
 
 **Options**:
-- Single engine
-- Twin engines (port/starboard)
-- Triple engines
-- Quad engines
+- Inboard gasoline (petrol)
+- Outboard
+- Diesel inboard
 
-**Maps to**: DIP Switches 1-2 (Engine Instance)
+**Maps to**: Block A (determines the lookup table for the RPM ratio)
+
+---
+
+### **Question 2: Engine Specification**
+
+For **inboard gasoline**:
+- "How many cylinders does your engine have?" (4, 6, 8, 10, 12)
+- "Is it 4-cycle or 2-cycle?" (almost always 4-cycle for inboard)
+
+For **outboard**:
+- "How many poles does your outboard alternator/stator have?" (4, 6, 8, 10, 12)
+- Help text: "This is usually in the engine service manual. If unknown, select 'I don't know'."
+
+For **diesel**:
+- "What is your engine's gear number?" (numeric entry)
+- Help text: "Found in the engine specification sheet, sometimes labeled 'Gear No.'"
+
+**Maps to**: Block A — determines the RPM speed ratio from the manufacturer's table
+
+**If unknown**: Display ratio lookup table from `CX5106_DIP_SWITCH.md` Appendix A; offer
+empirical method (measure at known RPM on the analogue tachometer).
+
+---
+
+### **Question 3: Tank Sender Standard**
+**Question**: "What type of tank level senders does your boat use?"
+
+**Options**:
+- American / North American (240–33 Ω, falling resistance)
+- European / International (0–190 Ω, rising resistance)
+- I don't know
+
+**Maps to**: Block B switch 1
+
+**Help text**:
+- **American senders**: Resistance is high (~240 Ω) when tank is empty; falls toward ~33 Ω when
+  full. Common on North American-built boats.
+- **European senders**: Resistance is low (~0 Ω) when empty; rises toward ~190 Ω when full.
+- **Telling them apart**: A mismatched sender will invert the gauge — full tank reads empty. If
+  you are not sure, note which way the gauge moved the last time you filled a tank.
+- This one switch applies to every tank at once (fuel, water, waste, livewell).
+
+**If "I don't know"**: Suggest American for North American boats as a starting assumption; advise
+operator that a mismatch will show as an inverted tank gauge.
+
+---
+
+### **Question 4: Engine Position**
+**Question**: "What position is this CX5106 monitoring?"
+
+**Options**:
+- Single engine (or port / primary)
+- Starboard engine
+
+**Maps to**: Block B switch 2
 
 **Logic**:
 ```
-Single engine → SW1: OFF, SW2: OFF (Instance 0)
-Twin engines → First engine: OFF/OFF, Second engine: ON/OFF
+Single engine      → Block B switch 2: OFF (PORT)
+Port engine        → Block B switch 2: OFF
+Starboard engine   → Block B switch 2: ON
 ```
 
----
-
-### **Question 2: Engine Position** (if multiple engines)
-**Question**: "Which engine is this CX5106 connected to?"
-
-**Options**:
-- Primary/Single
-- Port (left)
-- Starboard (right)
-- Center/Auxiliary
-
-**Maps to**: DIP Switches 1-2 (Engine Instance)
-
----
-
-### **Question 3: RPM Signal Source**
-**Question**: "What type of RPM signal does your engine provide?"
-
-**Options**:
-- Alternator W-Terminal (most common on older engines)
-- Ignition Coil (gasoline engines)
-- Magnetic Pickup on Flywheel (diesel engines)
-- ECU Digital Output (modern engines)
-- I don't know
-
-**Maps to**: DIP Switches 3-4 (RPM Source)
-
-**Help Text**:
-- **Alternator W-Terminal**: Look for a single wire terminal on the alternator labeled "W" or "~"
-- **Ignition Coil**: Gasoline engines - signal from coil negative terminal
-- **Magnetic Pickup**: Diesel engines - sensor mounted near flywheel
-- **ECU**: Modern engines with digital engine management
-
-**If "I don't know"**:
-- AI suggests based on engine make/model/year
-- Default: Alternator W-Terminal (most common)
-
----
-
-### **Question 4: Number of Cylinders**
-**Question**: "How many cylinders does your engine have?"
-
-**Options**:
-- 3 cylinders
-- 4 cylinders
-- 6 cylinders
-- 8 cylinders
-
-**Maps to**: DIP Switches 5-6 (Cylinders)
-
-**Validation**: Cross-check with engine make/model if known
-
----
-
-### **Question 5: Engine Stroke Type**
-**Question**: "Is your engine a 2-stroke or 4-stroke?"
-
-**Options**:
-- 4-Stroke (most common - diesel and modern gasoline)
-- 2-Stroke (older outboards, some small engines)
-
-**Maps to**: DIP Switch 7 (Stroke)
-
-**Help Text**: 
-- **4-Stroke**: Most modern marine engines (diesel, inboard gasoline)
-- **2-Stroke**: Older outboards, some small displacement engines
-
----
-
-### **Question 6: Gear Ratio**
-**Question**: "What is your engine's gear ratio?"
-
-**Options**:
-- 1:1 (Direct Drive - no reduction gear)
-- 2:1 (2:1 Reduction Gear)
-- Other ratio (manual entry)
-
-**Maps to**: DIP Switch 8 (Gear Ratio)
-
-**Help Text**:
-- **1:1**: Engine shaft directly connected to propeller shaft
-- **2:1**: Common on sailboats and displacement hulls
-- **Other**: If your ratio is 2.5:1, 3:1, etc., select "1:1" and note RPM will display 2x actual
-
-**Advanced**: Store actual ratio in config for future RPM correction
-
----
-
-### **Question 7: Tank Sensor Standard (SECOND ROW)**
-**Question**: "What region is your boat from, or what type of tank level sensors does it use?"
-
-**Options**:
-- North America / United States / Canada (240-33Ω senders)
-- Europe / International (0-190Ω senders)
-- I don't know
-
-**Maps to**: Second Row Switch "1" (Tank Sensor Resistance Standard)
-
-**Help Text**:
-- **North American boats**: Use 240-33Ω resistance senders for fuel, water, and waste tanks
-- **European boats**: Use 0-190Ω resistance senders
-- This setting affects fuel level, fresh water level, and waste tank level readings
-
-**If "I don't know"**:
-- AI suggests based on:
-  - Country of boat registration
-  - Boat manufacturer origin
-  - Engine manufacturer (American engines → likely American senders)
-- Default: If boat is in North America, select 240-33Ω (ON)
-
-**Validation**:
-- Cross-check with boat origin
-- If readings are inverted (empty shows full), toggle this switch
-
----
-
-### **Question 8: Engine Position (SECOND ROW - for multi-engine boats)**
-**Question**: "If you have multiple engines, which one is this CX5106 monitoring?"
-
-**Options**:
-- Single engine (or primary)
-- Port engine (left)
-- Starboard engine (right)
-
-**Maps to**: Second Row Switch "2" (Port/Starboard Designation)
-
-**Logic**:
-```
-Single engine → Second Row "2": OFF (Port/Primary)
-Port engine → Second Row "2": OFF
-Starboard engine → Second Row "2": ON
-```
-
-**Help Text**:
-- **Single engine**: Select "Single engine" - switch will be set to OFF
-- **Twin engines**: This designation helps organize which CX5106 is monitoring which engine
-- **Note**: This is different from First Row SW1-2 (NMEA2000 instance)
-
-**Auto-populate**:
-- If Question 1 (Number of Engines) = "Single", auto-set to OFF and skip this question
-- If Question 2 (Engine Position) answered, use that same designation
+**Help text**: On twin-engine vessels, both CX5106 units must be set differently. Two units with
+the same Block B switch 2 setting will collide on the NMEA 2000 network.
 
 ---
 
@@ -267,115 +180,77 @@ Starboard engine → Second Row "2": ON
 
 ### Step-by-Step Configuration
 
-**Step 1: Engine Count Detection**
+**Step 1: Determine the RPM ratio**
 ```
-Question: "How many engines?"
-User Answer: "Twin engines"
-System Action: Prepare for 2 CX5106 configurations
-```
-
-**Step 2: Per-Engine Configuration Loop**
-For each engine:
-
-```
-Wizard: "Configuring Engine 1 (Port)"
-
-FIRST ROW (Engine Configuration):
-Q1: Engine position? → Port
-    Maps to: SW1=ON, SW2=OFF (Instance 1)
-
-Q2: RPM signal source? → Alternator W-Terminal
-    Maps to: SW3=OFF, SW4=OFF
-
-Q3: Number of cylinders? → 4
-    Maps to: SW5=OFF, SW6=OFF
-
-Q4: Stroke type? → 4-Stroke
-    Maps to: SW7=OFF
-
-Q5: Gear ratio? → 2:1
-    Maps to: SW8=ON
-
-SECOND ROW (Regional & Position):
-Q6: Tank sensor standard? → North America (240-33Ω)
-    Maps to: Second Row "1"=ON
-
-Q7: Engine position? → Port (auto-filled from Q1)
-    Maps to: Second Row "2"=OFF
-
-System: Generates complete DIP switch diagram:
-
-FIRST ROW:
-┌─┬─┬─┬─┬─┬─┬─┬─┐
-│1│2│3│4│5│6│7│8│
-├─┼─┼─┼─┼─┼─┼─┼─┤
-│↑│↓│↓│↓│↓│↓│↓│↑│
-└─┴─┴─┴─┴─┴─┴─┴─┘
-
-SECOND ROW:
-┌───┬───┐
-│"1"│"2"│
-├───┼───┤
-│ ↑ │ ↓ │
-└───┴───┘
+Question: "Engine type?"           → Inboard gasoline
+Question: "Cylinders?"             → 8
+Question: "Stroke?"                → 4-cycle
+System: ratio = 4  (from table)
+System: Block A → switches 1 and 2 ON, switches 3–7 OFF
 ```
 
-**Step 3: Visual Confirmation**
-Display clear diagram showing:
-- Which switches to set UP (ON)
-- Which switches to set DOWN (OFF)
-- Physical location on CX5106 unit
-- Photo/diagram of actual hardware
-
-**Hardware Reference Photo:**
-
-![CX5106 DIP Switches](../../assets/images/cx5106_10125.png)
-
-*Use this photo to locate the DIP switches on your CX5106 unit*
-
-**Step 4: Verification Prompt**
+**Step 2: Set Block B**
 ```
-"Please set the DIP switches as shown above, then press Next.
+Question: "Tank senders?"          → North America (240–33 Ω)
+System: Block B switch 1 → ON
 
-⚠️ Important: Power cycle the CX5106 after changing DIP switches.
-Turn off power, wait 10 seconds, turn back on.
+Question: "Engine position?"       → Single / Port
+System: Block B switch 2 → OFF
+```
+
+**Step 3: Generate the diagram**
+```
+System output:
+
+   BLOCK A — set these seven switches:
+   +-------------------------------+
+   | ON                            |
+   | [X] [X] [ ] [ ] [ ] [ ] [ ]  |
+   |  1   2   3   4   5   6   7   |
+   +-------------------------------+
+   X = push toward ON label
+
+   BLOCK B — set these two switches:
+   +-------------+
+   | ON          |
+   | [X] [ ]     |
+   |  1   2      |
+   +-------------+
+```
+
+**Step 4: Verification prompt**
+```
+"Please set the DIP switches as shown, then press Next.
+
+Important: Power cycle the CX5106 after changing any switch.
+Turn the ignition off, wait 10 seconds, turn back on.
+Then watch the network for at least 2.5 minutes before
+concluding the unit is not present — it announces itself
+periodically, not continuously."
 ```
 
 ---
 
 ## Part 4: AI-Assisted Configuration
 
-### When User Selects "I Don't Know"
+### When user selects "I don't know" for ratio
 
-**If user doesn't know RPM signal source:**
+**Step 1**: Display the ratio lookup table (see `CX5106_DIP_SWITCH.md` Appendix A).
 
-AI inference based on:
-- Engine make/model/year
-- Fuel type (diesel vs gasoline)
-- Engine age
+**Step 2**: Offer the empirical method:
+- Start with ratio 2 (switch 1 ON, all others OFF)
+- Compare displayed RPM against analogue tachometer at a steady throttle
+- If display reads too high by factor N, multiply the ratio by N; if too low, divide
+- Repeat until displayed and analogue agree across the rev range
 
-Example:
+**Step 3**: AI inference based on engine make/model/year as a last resort. Always label this
+as an estimate and recommend the operator verify on the tachometer.
+
 ```
 Engine: Yanmar 3YM30, 2015, Diesel
-AI Inference: "Magnetic Pickup on Flywheel"
-Reasoning: "Modern diesel engines typically use magnetic pickups"
-Confidence: High
-```
-
-**If user doesn't know stroke type:**
-
-AI inference based on:
-- Engine make/model
-- Fuel type
-- Displacement
-
-Example:
-```
-Engine: Mercury 90HP Outboard, 2008
-AI Inference: "2-Stroke"
-Reasoning: "Mercury outboards before 2010 were predominantly 2-stroke"
-Confidence: Medium
-User Prompt: "Please verify in your engine manual"
+Diesel rule: Speed Ratio = Gear Number
+AI: "Check your engine specification sheet for the Gear Number.
+     If unavailable, start with ratio 2 and compare to your tachometer."
 ```
 
 ---
@@ -387,36 +262,23 @@ User Prompt: "Please verify in your engine manual"
 ```json
 {
   "engine": {
-    "manufacturer": "Yanmar",
-    "model": "3YM30",
-    "cylinders": 3,
-    "stroke": "4-stroke",
-    "fuel_type": "diesel",
-    "gear_ratio": "2:1"
+    "manufacturer": "MerCruiser",
+    "model": "7.4L MPI",
+    "type": "inboard_gasoline",
+    "cylinders": 8,
+    "stroke": "4-cycle"
   },
   "gateway": {
     "model": "CX5106",
-    "switches": {
-      "row1": {
-        "sw1": "ON",   // Engine instance 1 (port)
-        "sw2": "OFF",
-        "sw3": "OFF",  // Magnetic pickup
-        "sw4": "ON",
-        "sw5": "ON",   // 3 cylinders
-        "sw6": "ON",
-        "sw7": "OFF",  // 4-stroke
-        "sw8": "ON"    // 2:1 gear ratio
-      },
-      "row2": {
-        "sw1": "ON",   // American 240-33Ω tank senders
-        "sw2": "OFF"   // Port engine designation
-      }
-    },
-    "instance": 1,
-    "rpm_source": "magnetic_pickup",
-    "tank_sensor_standard": "american_240_33",
+    "rpm_speed_ratio": 4,
+    "block_a_switches_on": [1, 2],
+    "tank_sender_standard": "american_240_33",
     "engine_position": "port",
-    "notes": "Port engine - Yanmar 3YM30 diesel with 2:1 reduction gear, North American boat"
+    "block_b": {
+      "sw1": "ON",
+      "sw2": "OFF"
+    },
+    "notes": "8-cyl 4-cycle V8 → ratio 4 → sw1+sw2 ON. North American boat. Single / port."
   }
 }
 ```
@@ -425,101 +287,84 @@ User Prompt: "Please verify in your engine manual"
 
 ## Part 6: Common Configurations
 
-### Configuration Presets
-
-#### **Single Yanmar 3YM30 Diesel**
+#### **Single MerCruiser 7.4L V8 Gasoline (8-cyl, 4-cycle)**
 ```
-SW1: OFF    (Instance 0)
-SW2: OFF
-SW3: OFF    (Magnetic pickup)
-SW4: ON
-SW5: ON     (3 cylinders)
-SW6: ON
-SW7: OFF    (4-stroke)
-SW8: ON     (2:1 gear)
+Block A: sw1 ON, sw2 ON, sw3–7 OFF    (ratio 4)
+Block B: sw1 ON (American), sw2 OFF (port/single)
 ```
 
-#### **Twin Volvo Penta D4 Diesel (Port Engine)**
+#### **Single Yanmar 3YM30 Diesel (Gear Number 2)**
 ```
-SW1: ON     (Instance 1 - Port)
-SW2: OFF
-SW3: OFF    (Alternator W-terminal)
-SW4: OFF
-SW5: OFF    (4 cylinders)
-SW6: OFF
-SW7: OFF    (4-stroke)
-SW8: OFF    (1:1 direct drive)
+Block A: sw1 ON, sw2–7 OFF            (ratio 2)
+Block B: sw1 ON (American), sw2 OFF (port/single)
 ```
 
-#### **Single Mercruiser 5.7L Gasoline V8**
+#### **Single Volvo Penta D4 Diesel (Gear Number 3)**
 ```
-SW1: OFF    (Instance 0)
-SW2: OFF
-SW3: ON     (Ignition coil)
-SW4: OFF
-SW5: OFF    (8 cylinders)
-SW6: ON
-SW7: OFF    (4-stroke)
-SW8: OFF    (1:1 direct)
+Block A: sw2 ON, sw1 sw3–7 OFF        (ratio 3)
+Block B: sw1 ON (American), sw2 OFF (port/single)
+```
+
+#### **Twin MerCruiser V8 — Port unit**
+```
+Block A: sw1 ON, sw2 ON, sw3–7 OFF    (ratio 4)
+Block B: sw1 ON (American), sw2 OFF (PORT)
+```
+
+#### **Twin MerCruiser V8 — Starboard unit**
+```
+Block A: sw1 ON, sw2 ON, sw3–7 OFF    (ratio 4)
+Block B: sw1 ON (American), sw2 ON (STBD)
 ```
 
 ---
 
 ## Part 7: Troubleshooting
 
-### RPM Reading is Double Actual
-**Cause**: Wrong gear ratio setting
-**Fix**: Change SW8 from OFF to ON (or vice versa)
+### RPM Reading is a Constant Multiple of True Value
+**Cause**: Wrong speed ratio — a ratio error is a constant factor, not one that changes with RPM.
+**Fix**: Determine the observed factor (displayed ÷ actual). Adjust the ratio by that factor using
+the empirical method in `CX5106_DIP_SWITCH.md` §10.
 
-### RPM Reading is Zero
-**Possible Causes**:
-1. Wrong RPM source (SW3/SW4)
-2. Wrong cylinder count (SW5/SW6)
-3. Wrong stroke type (SW7)
-4. Physical wiring issue
+### RPM Error Changes With Engine Speed
+**Cause**: Not the ratio (a ratio error is a fixed proportion). Investigate the tachometer
+signal source and its wiring.
 
-**Debug Steps**:
-1. Verify signal wire connected to correct engine terminal
-2. Check DIP switches match wizard configuration
-3. Power cycle CX5106
-4. Check NMEA2000 backbone termination
+### Tank Gauge is Inverted (full reads empty or vice versa)
+**Cause**: Block B switch 1 is set to the wrong sender standard.
+**Fix**: Flip Block B switch 1. Measure sender resistance at empty and full if uncertain.
 
-### RPM Fluctuates Wildly
-**Cause**: Usually wrong cylinder count
-**Fix**: Verify actual cylinder count and set SW5/SW6 correctly
+### Unit Does Not Appear on the Network
+1. Confirm ignition supply (10–30 V DC) is present at the gateway.
+2. Confirm NMEA 2000 backbone is powered and terminated at both ends.
+3. **Watch for at least 2.5 minutes** — the unit announces periodically, not continuously.
+
+### Unit Present But RPM Not Displayed
+**Cause**: Wiring or sender issue, not the ratio (the ratio scales a value, not whether it is sent).
+**Fix**: Check sender wiring against the terminal reference in `CX5106_DIP_SWITCH.md` Appendix B.
+
+### Twin-Engine Data Collides or One Engine Missing
+**Cause**: Both gateways have Block B switch 2 set the same.
+**Fix**: One unit switch 2 OFF (PORT), the other switch 2 ON (STBD).
 
 ---
 
 ## Summary
 
-### 8 Critical Questions for Complete CX5106 Configuration:
+### The Three Questions for Complete CX5106 Configuration
 
-**FIRST ROW (Engine Configuration):**
-1. **Number of engines** → SW1/SW2 (Instance)
-2. **Engine position** (if multiple) → SW1/SW2 (Instance)
-3. **RPM signal source** → SW3/SW4 (Signal Type)
-4. **Number of cylinders** → SW5/SW6 (Cylinder Count)
-5. **Engine stroke type** → SW7 (2-stroke/4-stroke)
-6. **Gear ratio** → SW8 (1:1 or 2:1)
+1. **RPM speed ratio** → Block A (7 switches, binary, ratio = 1 + sum of ON values)
+2. **Tank sender standard** → Block B switch 1 (OFF = 0–190 Ω European; ON = 240–33 Ω American)
+3. **Engine position** → Block B switch 2 (OFF = PORT; ON = STBD)
 
-**SECOND ROW (Regional & Position):**
-7. **Tank sensor standard** → Second Row "1" (American/European)
-8. **Engine position designation** → Second Row "2" (Port/Starboard)
+### Output
+- Block A diagram (7 switches)
+- Block B diagram (2 switches)
+- JSON configuration
+- Power-cycle reminder
+- Network verification instructions
 
-### Output:
-- Complete visual DIP switch diagram (both rows)
-- JSON configuration with all settings
-- Setup instructions
-- Verification steps
-
-### Complete Configuration Example:
-```
-FIRST ROW:  [SW1-8 settings]
-SECOND ROW: ["1"-"2" settings]
-
-Result: CX5106 correctly converts:
-- Engine analog signals → NMEA2000 PGNs
-- Tank level sensors → Accurate fuel/water/waste readings
-```
-
-This ensures the CX5106 correctly converts analog engine signals AND tank level sensors to NMEA2000 PGNs that chartplotters can display with proper regional calibration.
+### Full detail
+See `CX5106_DIP_SWITCH.md` for the complete derivation guide including the full ratio table
+(1–127), the empirical calibration method, and the manufacturer's terminal and sender
+specifications.

@@ -228,7 +228,7 @@ Turkish · Ukrainian · Chinese
 
 | Document | Description |
 |----------|-------------|
-| [`docs/D3KOS_USER_MANUAL_v2.3.0.md`](docs/D3KOS_USER_MANUAL_v2.3.0.md) | Complete user manual — all features, setup, troubleshooting |
+| [`docs/D3KOS_USER_MANUAL_v2.4.0.md`](docs/D3KOS_USER_MANUAL_v2.4.0.md) | Complete user manual — all features, setup, troubleshooting |
 | [`docs/INSTALLATION.md`](docs/INSTALLATION.md) | Step-by-step installation guide |
 | [`docs/CX5106_CONFIGURATION_GUIDE.md`](docs/CX5106_CONFIGURATION_GUIDE.md) | CX5106 NMEA gateway setup and DIP switch reference |
 | [`docs/OPENCPN_FLATPAK_OCHARTS.md`](docs/OPENCPN_FLATPAK_OCHARTS.md) | OpenCPN and paid o-charts chart packs |

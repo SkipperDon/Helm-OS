@@ -1,7 +1,7 @@
 # d3kOS INSTALLATION GUIDE
 
-**Version**: 2.0
-**Last Updated**: February 7, 2026
+**Version**: 2.1
+**Last Updated**: September 2, 2026
 
 ---
 
@@ -62,7 +62,7 @@ d3kOS is a comprehensive marine electronics system built on Raspberry Pi 4. This
 | Component | Specification | Required/Optional |
 |-----------|---------------|-------------------|
 | **Raspberry Pi 4** | Model B, 4GB RAM minimum | Required |
-| **SD Card** | 64GB Class 10 A2 or better | Required |
+| **SD Card** | 128GB Class 10 A2 or better | Required |
 | **Power Supply** | Official Raspberry Pi 5V 3A USB-C | Required |
 | **PiCAN-M HAT** | With micro-fit connector | Required |
 | **Display** | 10.1" 1920×1200 touchscreen | Required |
@@ -88,7 +88,7 @@ d3kOS is a comprehensive marine electronics system built on Raspberry Pi 4. This
 | USB GPS Receiver | VK-162 | 1 | $15 |
 | USB AIS Receiver | dAISy | 1 | $80 |
 | Anker PowerConf S330 | A3302 | 1 | $130 |
-| SD Card (64GB Class 10 A2) | SanDisk Extreme | 1 | $12 |
+| SD Card (128GB Class 10 A2) | SanDisk Extreme | 1 | $18 |
 | 12V to 5V DC Converter | Victron Orion-Tr | 1 | $35 |
 | Micro-Fit Connector | Molex 43025-0400 | 1 | $5 |
 | Enclosure | Custom 3D-printed | 1 | $20 |
@@ -215,20 +215,20 @@ d3kOS is a comprehensive marine electronics system built on Raspberry Pi 4. This
 #### Step 1: Download d3kOS Image
 
 1. Visit GitHub releases: `https://github.com/SkipperDon/d3kOS/releases/latest`
-2. Download `d3kos-v2.0.0.img.gz` (~4GB compressed)
-3. Download `d3kos-v2.0.0.img.gz.sha256` (checksum file)
+2. Download `d3kos-v0.9.9.4-20260902.img.gz` (~11.6GB compressed)
+3. Download `d3kos-v0.9.9.4-20260902.img.gz.sha256` (checksum file)
 
 #### Step 2: Verify Download
 
 **On Linux/Mac:**
 ```bash
-sha256sum -c d3kos-v2.0.0.img.gz.sha256
+sha256sum -c d3kos-v0.9.9.4-20260902.img.gz.sha256
 ```
 
 **On Windows:**
 ```powershell
-certutil -hashfile d3kos-v2.0.0.img.gz SHA256
-# Compare output with contents of .sha256 file
+certutil -hashfile d3kos-v0.9.9.4-20260902.img.gz SHA256
+# Expected: 2436be984e7ca59a6c9785020e50afdb0b8cdd1508f3c07be261e2765e340f1a
 ```
 
 #### Step 3: Flash SD Card
@@ -257,10 +257,10 @@ certutil -hashfile d3kos-v2.0.0.img.gz SHA256
 
 ```bash
 # Decompress image
-gunzip d3kos-v2.0.0.img.gz
+gunzip d3kos-v0.9.9.4-20260902.img.gz
 
 # Flash to SD card (replace /dev/sdX with your SD card device)
-sudo dd if=d3kos-v2.0.0.img of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if=d3kos-v0.9.9.4-20260902.img of=/dev/sdX bs=4M status=progress conv=fsync
 
 # Sync to ensure all data is written
 sync

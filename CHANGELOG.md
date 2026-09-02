@@ -39,6 +39,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.9.4] - 2026-09-02
+
+### Summary
+
+**v0.9.9.4 — Security Hardening + Release Image v4.1**
+
+d3kOS v0.9.9.4 is the security-hardened release image milestone. This release closes the credential-exposure
+vector in the image build pipeline (BUG-78), hardens every server-facing endpoint with Ed25519 device
+authentication (BUG-66), and resolves 40+ bugs across the dashboard, cloud export, AvNav navigation,
+Setup wizard, and identity regeneration systems. The release image `d3kos-v0.9.9.4-20260902.img.gz`
+is clean-verified: zero credentials, zero prior identity, Ollama stripped (optional install-ollama.sh),
+first-boot identity regeneration confirmed functional.
+
+**Image:** `d3kos-v0.9.9.4-20260902.img.gz` — 11,840 MB (11.6 GB compressed)
+**SHA-256:** `2436be984e7ca59a6c9785020e50afdb0b8cdd1508f3c07be261e2765e340f1a`
+
+### Security
+
+- **BUG-78 RESOLVED — Image build pipeline credential strip** — `sanitize.sh` v4.1 now removes all credentials, SSH host keys, device identity, Ollama model blobs, and user data before image capture. Build assertion fails loudly if any secret survives. Prior images (before v4.0) baked live credentials into the image file. This is the most critical fix in this release.
+
+- **BUG-66 COMPLETE — Ed25519 server-side request authentication** — All five Pi-to-server HostPapa endpoints now verify Ed25519 request signatures: `version-heartbeat.php`, `device-enroll.php`, `community-markers.php`, `alert-notify.php`, `offline-check.php`. Unsigned requests rejected with 401.
+
+- **BUG-39 — Identity regeneration on first boot** — `.identity-regenerated` sentinel correctly removed from master image so every cloned Pi generates a unique device token, installation ID, and signing key on first boot. Prior builds carried the master Pi's identity into every clone.
+
+- **BUG-57 CONTAINED — Botnet registration attack** — `/register/` page device-gated (Ed25519). Removes the open-registration vector exploited in the 62,000-account botnet attack. MailPoet auto-create-WP-user gate pending operator verification.
+
+- **BUG-58/59 — Config directory access controls** — `/opt/d3kos/config/` permissions tightened; `cloud-config.json` mode 600.
+
+### Dashboard & Navigation
+
+- **BUG-43/46/47/48 FIXED** — Engine monitor, alert ticker, GPS compass, and AIS overlays now work when accessing the dashboard from any remote IP. Prior versions had `localhost` hardcoded in front-end JavaScript, which caused all remote gauge data to fail silently.
+
+- **BUG-19/20 FIXED** — AIS fetch disabled by default (prevents false-vessel display when no AIS hardware present). Forward-watch obstacle model rebuilt.
+
+- **BUG-29/30/32 FIXED** — Engine RPM, coolant temperature, and oil pressure gauges read correctly from CAN bus / SignalK. CX5106 DIP switch configuration guide added.
+
+- **Signal K** — `avnav_server.xml.template` added to canonical tree (S133). u-blox GPS ignore rule in lab vs boat Pi documented in `PI_CONFIG_DELTA.md`.
+
+### Cloud Export
+
+- **BUG-54 Part 1 FIXED** — Export pipeline `PYTHONUNBUFFERED=1` fix eliminates systemd print-buffering failures that caused silent export loss.
+
+- **BUG-55 FIXED** — All 17 Pi services now point to production HostPapa endpoints. 9 were using staging URL fallbacks. Guard script `tools/verify-bug55.sh` prevents regression.
+
+- **BUG-72 (version-heartbeat) FIXED** — Pi → HostPapa version heartbeat now authenticated with Ed25519. Heartbeat confirmed delivering version data to admin fleet view.
+
+### Setup & Identity
+
+- **BUG-39 FIXED** — First-boot identity regeneration service (`d3kos-identity-regen`) confirmed `enabled` and operational. Device token, installation ID, and Ed25519 signing key all regenerate on first boot from a cloned image.
+
+- Setup wizard CX5106 DIP switch guide corrected (BUG-81). Prior guide had 8/10 settings wrong. New guide includes leaflet-decoded binary encoding for all RPM ratios.
+
+### Local AI — Ollama (Optional)
+
+- Ollama and model blobs (`gemma3:1b`, `nomic-embed-text`) are **not** included in the release image.
+
+- After first boot, run `/opt/d3kos/scripts/install-ollama.sh` to install Ollama and pull models. Requires internet access and ~3 GB free disk space.
+
+- This reduces the base image by ~2 GB and makes local AI an opt-in feature for operators with the available storage and internet access.
+
+### Image & Release Infrastructure
+
+- `sanitize.sh` v4.1 — complete credential, identity, log, Ollama, and user-data wipe with post-wipe assertions.
+
+- `create-image.sh` — version string updated to 0.9.9.4; calls sanitize.sh before dd.
+
+- `release-state.sh` — three-way drift verifier (repo ↔ MANIFEST.md5 ↔ Pi). Confirmed 215 identical files, 0 drifted, 0 missing before sanitize run.
+
+- `MANIFEST.md5` — regenerated: 215 entries, 0 stale.
+
+- `install-ollama.sh` — new post-boot optional installer for Ollama + models.
+
+### Pending
+
+- **Phase 5 — Clone verification** — flash `d3kos-v0.9.9.4-20260902.img.gz` to spare SD card, boot, verify: BUG-39 fires (new device-token.json generated), Tier 0 license, no prior credentials, `systemctl --failed` = 0, dashboard loads at `:3000`.
+
+- **BUG-54 Part 2** — nginx HTTP 400 on export to live HostPapa (deferred — requires on-boat connectivity).
+
+- **o-charts renewal** — CAac + CAgl expired 2026-04-01. Renew at o-charts.org.
+
+---
+
 ## [0.9.6] - 2026-04-07 (In Progress)
 
 ### Summary
